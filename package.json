@@ -23,7 +23,8 @@
 			{
 				"command": "vscode-run-diff.runDiff",
 				"title": "Run Current File and Diff Output",
-        "enablement": "editorLangId == python"
+        		"enablement": "editorLangId == python",
+                "icon": "$(play)"
 			}
 		],
     "keybindings": [
@@ -32,6 +33,20 @@
         "key": "alt+shift+z"
       }
     ],
+	"languages": [
+		{
+			"id": "python-run-diff"
+		}
+	],
+	"menus": {
+		"editor/title/run": [
+			{
+				"command": "vscode-run-diff.runDiff",
+				"group": "Python",
+				"when": "resourceLangId == python && !virtualWorkspace"
+			}
+		]
+	},
     "configuration": [
       {
         "title": "vscode-run-diff",

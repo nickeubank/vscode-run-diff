@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   let disposable = vscode.commands.registerCommand('vscode-run-diff.runDiff', async () => {
     // Ensure file is saved before attempting to run it
-    await vscode.workspace.saveAll(true);
+    await vscode.workspace.saveAll(false);
     const activePythonFile = vscode.window.activeTextEditor;
     if (activePythonFile?.document.languageId !== 'python') {
       return;
@@ -22,8 +22,20 @@ export function activate(context: vscode.ExtensionContext) {
         outputChannel.append(`Error: ${err.name} ${err.message}`);
       } else {
         // Dump stdout into untitled file
-        const actualFilePath = await vscode.workspace.openTextDocument({ content: stdout });
-        await vscode.commands.executeCommand('vscode.diff', expectedFilePath, actualFilePath.uri, 'Expected vs Actual Output');
+        let actualOutputDocument = vscode.workspace.textDocuments.find((document) => document.languageId === 'python-run-diff');
+        if (actualOutputDocument) {
+          const edit = new vscode.WorkspaceEdit();
+          edit.replace(actualOutputDocument.uri, new vscode.Range(0, 0, actualOutputDocument.lineCount, 0), stdout);
+          await vscode.workspace.applyEdit(edit);
+        }
+        const actualFilePath = actualOutputDocument ?? await vscode.workspace.openTextDocument({ content: stdout, language: 'python-run-diff' });
+        await vscode.commands.executeCommand(
+          'vscode.diff',
+          expectedFilePath,
+          actualFilePath.uri,
+          'Expected vs Actual Output',
+          { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true, preview: true }
+        );
       }
     });
   });
