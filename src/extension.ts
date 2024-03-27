@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
   const outputChannel = vscode.window.createOutputChannel('Run and Diff');
@@ -15,8 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
     // Get file containing expected program output
     const expectedFilePath = await getExpectedOutputFile(outputChannel);
 
+    const setCwd = vscode.workspace.getConfiguration('python.terminal').get<boolean>('executeInFileDir')
+      ? `cd ${path.dirname(activePythonFile.document.uri.fsPath)} && `
+      : '';
+
     // Run active text editor
-    cp.exec(`python3 ${activePythonFile.document.uri.fsPath}`, async (err, stdout) => {
+    cp.exec(`${setCwd}python3 ${activePythonFile.document.uri.fsPath}`, async (err, stdout) => {
       if (err) {
         await vscode.window.showErrorMessage(`Encountered error while executing Python code: ${err.message}`);
         outputChannel.append(`Error: ${err.name} ${err.message}`);
